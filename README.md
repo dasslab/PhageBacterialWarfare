@@ -1,1 +1,1 @@
-# PhageBacterialWarfare
+This repository contains the scripts used in the data analysis for the manuscript "Unraveling the Coevolutionary Dynamics of Phage and Bacterial Protein Warfare Occurring in the Drains of Beef-Processing Plants"
