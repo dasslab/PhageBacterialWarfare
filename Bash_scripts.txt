@@ -1,0 +1,46 @@
+
+#VirSorter2
+virsorter run -w VIRSorter_predicted_viral_fna -i pooled.contigs.l500.fasta --min-length 500 -j 8 all
+
+#BLASTN search against Viral Database
+makeblastdb -in viral.1.1.genomic.fna -dbtype nucl -out viral_db
+
+blastn -query VIRSorter_predicted_viral_fna/viral-combined-cats.fasta -db viral_db -out blastn_results.tsv -evalue 0.005 -perc_identity 70 -outfmt '6 qseqid sseqid salltitles pident length mismatch gapopen qstart qend sstart send evalue bitscore' -max_target_seqs 1
+
+#Reads Abundance Calculation
+bwa index VIRSorter_predicted_viral_fna/viral-combined-cats.fasta
+
+bwa mem VIRSorter_predicted_viral_fna/viral-combined-cats.fasta pooled-all.fastq | samtools view -b | samtools sort -T viral > viral.sort.bam
+samtools index viral.sort.bam
+samtools idxstats viral.sort.bam > viral.idxstats.tsv
+
+#Gene Prediction
+prodigal -a viral.proteins.fasta -c -d $output_dir/viral.nucleotides.fasta -f gff -i viral-combined-cats.fasta -o output_dir/viral.gff
+
+
+#Viral Binning
+vRhyme -i viral-combined-cats.fasta -b viral.sort.bam
+
+
+#PHAROKKA
+
+./pharokka.py -i /media/gtlab/b8e6f206-57aa-4244-aa45-52819c7633ca/Project/shotgun/qc-reads/out-microbial-reads/fastq/pooled-assembly/pooled.virsorter.out/viral_bin13_hq.fasta -o /media/gtlab/b8e6f206-57aa-4244-aa45-52819c7633ca/Project/shotgun/qc-reads/out-microbial-reads/fastq/pooled-assembly/pooled.virsorter.out/Pharokka_OUT -t 16
+
+./pharokka_plotter.py -i /media/gtlab/b8e6f206-57aa-4244-aa45-52819c7633ca/Project/shotgun/qc-reads/out-microbial-reads/fastq/pooled-assembly/pooled.virsorter.out/Pharokka_OUT/phanotate.faa -n pharokka_plot -o /media/gtlab/b8e6f206-57aa-4244-aa45-52819c7633ca/Project/shotgun/qc-reads/out-microbial-reads/fastq/pooled-assembly/pooled.virsorter.out/Pharokka_OUT/ -t 16
+
+# PHROGs annotation
+blastp -query viral.proteins.fasta -db FAA_phrog/phrog_db.faa -out phrogs_pooled.out.txt -outfmt '6 qseqid sseqid salltitles pident length mismatch gapopen qstart qend sstart send evalue bitscore' -max_target_seqs 1 
+
+
+# 8. CRISPR ARRAYS (PILER-CR)
+pilercr -in bacterial_assembly.fasta -out crispr_output.txt
+
+#Anti-CRISPR
+makeblastdb -in antiCRISPRdb.fasta -dbtype prot -out acr_db
+
+blastp -query viral.proteins.fasta -db acr_db -out viral.acr.tsv -evalue 0.001 -perc_identity 80 -outfmt '6 qseqid sseqid salltitles pident length mismatch gapopen qstart qend sstart send evalue bitscore' -max_target_seqs 1
+
+#Polysaccharide Depolymerases
+makeblastdb -in depolymerase_db.fasta -dbtype prot -out depoly_db
+
+blastp -query viral.proteins.fasta -db depoly_db -out viral.depolymerases.tsv -evalue 0.001 -outfmt '6 qseqid sseqid salltitles pident length mismatch gapopen qstart qend sstart send evalue bitscore' -max_target_seqs 1
