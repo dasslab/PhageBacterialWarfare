@@ -1,6 +1,6 @@
 
 #VirSorter2
-virsorter run -w VIRSorter_predicted_viral_fna -i pooled.contigs.l500.fasta --min-length 500 -j 8 all
+virsorter run -w VIRSorter_predicted_viral_fna -i pooled.contigs.l500.fasta --min-length 250 -j 8 all
 
 #BLASTN search against Viral Database
 makeblastdb -in viral.1.1.genomic.fna -dbtype nucl -out viral_db
