@@ -5,21 +5,21 @@ virsorter run -w VIRSorter_predicted_viral_fna -i pooled.contigs.l500.fasta --mi
 #BLASTN search against Viral Database
 makeblastdb -in viral.1.1.genomic.fna -dbtype nucl -out viral_db
 
-blastn -query VIRSorter_predicted_viral_fna/viral-combined-cats.fasta -db viral_db -out blastn_results.tsv -evalue 0.005 -perc_identity 70 -outfmt '6 qseqid sseqid salltitles pident length mismatch gapopen qstart qend sstart send evalue bitscore' -max_target_seqs 1
+blastn -query final-viral-combined.fa -db viral_db -out blastn_results.tsv -evalue 0.005 -perc_identity 70 -outfmt '6 qseqid sseqid salltitles pident length mismatch gapopen qstart qend sstart send evalue bitscore' -max_target_seqs 1
 
 #Reads Abundance Calculation
-bwa index VIRSorter_predicted_viral_fna/viral-combined-cats.fasta
+bwa index VIRSorter_predicted_viral_fna/final-viral-combined.fa
 
-bwa mem VIRSorter_predicted_viral_fna/viral-combined-cats.fasta pooled-all.fastq | samtools view -b | samtools sort -T viral > viral.sort.bam
+bwa mem VIRSorter_predicted_viral_fna/final-viral-combined.fa pooled-all.fastq | samtools view -b | samtools sort -T viral > viral.sort.bam
 samtools index viral.sort.bam
 samtools idxstats viral.sort.bam > viral.idxstats.tsv
 
 #Gene Prediction
-prodigal -a viral.proteins.fasta -c -d $output_dir/viral.nucleotides.fasta -f gff -i viral-combined-cats.fasta -o output_dir/viral.gff
+prodigal -a viral.proteins.fasta -c -d $output_dir/viral.nucleotides.fasta -f gff -i final-viral-combined.fa -o output_dir/viral.gff
 
 
 #Viral Binning
-vRhyme -i viral-combined-cats.fasta -b viral.sort.bam
+vRhyme -i final-viral-combined.fa -b viral.sort.bam
 
 
 #PHAROKKA
